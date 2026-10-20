@@ -1,0 +1,294 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Key Detective</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Layout: the identification key drawn as a tree on one side, the detective game panel on the other. Stacks on phones. */
+:root {
+  --bg: #E9F3FF; --surface: #FFFFFF; --ink: #1B2A4A; --muted: #55688A; --line: #C3D5EE;
+  --blue: #2F72DA; --orange: #E2570E; --good: #1F8F47; --good-soft: #DDF5E5; --bad: #C2410C; --star: #FFC42E; --star-off: #D5E0F0;
+  --mam: #E2570E; --bir: #2F72DA; --fis: #0E8E9B; --rep: #1F8F47; --amp: #7C4DBE;
+  --on-accent: #FFFFFF;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E182B; --surface: #172540; --ink: #EAF1FF; --muted: #9DB1D6; --line: #2E4268;
+    --blue: #6FA6FF; --orange: #FF9560; --good: #5EDC8A; --good-soft: #17402A; --bad: #FF9A6B; --star: #FFD04F; --star-off: #33466B;
+    --mam: #FF9560; --bir: #6FA6FF; --fis: #4FD2DE; --rep: #5EDC8A; --amp: #B596F0; --on-accent: #0E182B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E182B; --surface: #172540; --ink: #EAF1FF; --muted: #9DB1D6; --line: #2E4268;
+  --blue: #6FA6FF; --orange: #FF9560; --good: #5EDC8A; --good-soft: #17402A; --bad: #FF9A6B; --star: #FFD04F; --star-off: #33466B;
+  --mam: #FF9560; --bir: #6FA6FF; --fis: #4FD2DE; --rep: #5EDC8A; --amp: #B596F0; --on-accent: #0E182B;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-weight: 700;
+  padding-block: 16px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 4px solid var(--star); outline-offset: 2px; }
+h1 { font-family: var(--display); font-size: clamp(1.7rem, 6vw, 2.4rem); margin: 0; line-height: 1.1; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 0.98rem; }
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.sound { background: var(--surface); border: 2px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; font-weight: 800; }
+
+.progress { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.phase { font-family: var(--display); background: var(--blue); color: var(--on-accent); padding: 4px 14px; border-radius: 999px; font-size: 1rem; }
+.stars { display: flex; gap: 4px; }
+.star { width: 26px; height: 26px; }
+.star path { fill: var(--star-off); transition: fill .3s; }
+.star.on path { fill: var(--star); stroke: var(--orange); stroke-width: 1.5; }
+.star.on { animation: pop .4s ease; }
+
+.guide { display: flex; gap: 12px; align-items: flex-start; }
+.owl { font-size: 46px; line-height: 1; flex: none; }
+.bubble { position: relative; background: var(--surface); border: 3px solid var(--line); border-radius: 18px; padding: 12px 16px; font-size: 1.1rem; line-height: 1.4; flex: 1; min-width: 0; min-height: 3.4em; }
+.bubble::before { content: ""; position: absolute; left: -11px; top: 18px; width: 16px; height: 16px; background: var(--surface); border-left: 3px solid var(--line); border-bottom: 3px solid var(--line); transform: rotate(45deg); }
+.bubble.good { border-color: var(--good); background: var(--good-soft); }
+.bubble.good::before { border-color: var(--good); background: var(--good-soft); }
+.bubble.try { border-color: var(--bad); }
+.bubble.try::before { border-color: var(--bad); }
+
+.layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+.panel { background: var(--surface); border: 3px solid var(--line); border-radius: 22px; padding: 14px; min-width: 0; }
+.panel h2 { font-family: var(--display); font-weight: 600; font-size: 1.15rem; margin: 0 0 8px; color: var(--muted); }
+.tree { width: 100%; max-width: 380px; height: auto; display: block; margin: 0 auto; }
+
+/* tree styling */
+.edge { stroke: var(--line); stroke-width: 3; fill: none; }
+.edge.walked { stroke: var(--good); stroke-width: 5; }
+.elabel { font-size: 10px; font-weight: 800; fill: var(--muted); text-anchor: middle; }
+.qnode rect { fill: var(--surface); stroke: var(--blue); stroke-width: 2.5; }
+.qnode text { font-size: 11px; font-weight: 800; fill: var(--ink); text-anchor: middle; }
+.qnode.missing rect { stroke-dasharray: 5 4; stroke: var(--orange); }
+.qnode.active rect { stroke: var(--star); stroke-width: 5; }
+.qnode.walked rect { fill: var(--good-soft); stroke: var(--good); }
+.leaf circle { fill: var(--surface); stroke-width: 3.5; }
+.leaf text.em { font-size: 26px; text-anchor: middle; dominant-baseline: central; }
+.leaf text.lb { font-size: 11px; font-weight: 800; fill: var(--ink); text-anchor: middle; }
+.leaf.found circle { fill: var(--good-soft); stroke-width: 6; }
+.leaf.found { animation: pop .5s ease; transform-box: fill-box; transform-origin: center; }
+
+/* game panel */
+.choices { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.choice { background: var(--bg); border: 3px solid var(--line); border-radius: 16px; padding: 14px 16px; font-size: 1.15rem; text-align: left; cursor: pointer; font-weight: 800; }
+.choice:hover { border-color: var(--blue); }
+.choice.shake { animation: shake .45s; border-color: var(--bad); }
+.case { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; }
+.mystery { width: 96px; height: 96px; border-radius: 50%; border: 4px dashed var(--line); display: grid; place-items: center; font-size: 52px; background: var(--bg); }
+.mystery.revealed { border-style: solid; border-color: var(--good); background: var(--good-soft); animation: pop .5s ease; }
+.case h3 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 1.1rem; }
+.facts { margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.facts li { background: var(--bg); border-radius: 12px; padding: 6px 10px; font-size: 0.98rem; line-height: 1.3; border: 2px solid transparent; }
+.facts li.flash { border-color: var(--star); animation: bob .6s ease-in-out 3; }
+.question { margin: 14px 0 0; font-family: var(--display); font-weight: 600; font-size: clamp(1.3rem, 5vw, 1.7rem); line-height: 1.2; text-align: center; text-wrap: balance; }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.yn button { font-family: var(--display); font-size: 1.6rem; font-weight: 600; border: 0; border-radius: 18px; padding: 14px 8px; cursor: pointer; color: var(--on-accent); }
+.yn .yes { background: var(--good); } .yn .no { background: var(--orange); }
+.yn button.shake { animation: shake .45s; }
+.btn { font-family: var(--display); font-size: 1.15rem; padding: 10px 22px; border-radius: 999px; border: 0; cursor: pointer; background: var(--blue); color: var(--on-accent); font-weight: 600; }
+.center { display: flex; justify-content: center; margin-top: 14px; }
+.done { text-align: center; padding: 14px 4px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.done .big { font-size: 56px; }
+.done h2 { font-family: var(--display); margin: 0; font-size: 1.6rem; color: var(--ink); font-weight: 600; }
+.done p { margin: 0; color: var(--muted); font-size: 1.05rem; }
+
+.conf { position: fixed; top: -40px; font-size: 28px; pointer-events: none; z-index: 20; animation: fall 2.2s linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+@keyframes pop { 0% { transform: scale(.5); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <div>
+      <h1>Key Detective</h1>
+      <p class="sub">Answer Yes or No to follow the key and find the mystery animal.</p>
+    </div>
+    <button class="sound" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
+  </header>
+
+  <div class="progress">
+    <span class="phase" id="phaseLabel">Step 1: Fix the key</span>
+    <div class="stars" id="stars"></div>
+  </div>
+
+  <div class="guide">
+    <div class="owl" aria-hidden="true">🦉</div>
+    <div class="bubble" id="msg" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="layout">
+    <section class="panel" aria-label="The identification key">
+      <h2>The identification key</h2>
+      <svg class="tree" id="tree" viewBox="0 0 340 392" role="img" aria-label="Identification key tree: does it have legs, feathers, lay eggs, and a fourth question, leading to shark, parrot, lion, chameleon and frog"></svg>
+    </section>
+    <section class="panel" id="game" aria-label="Game"></section>
+  </div>
+</div>
+
+<script>
+/* ---------- the key (page 45) ---------- */
+const GROUPS = { mammal: "--mam", bird: "--bir", fish: "--fis", reptile: "--rep", amphibian: "--amp" };
+const LEAVES = {
+  shark: { em: "🦈", label: "shark (fish)", group: "fish", x: 265, y: 106 },
+  parrot: { em: "🦜", label: "parrot (bird)", group: "bird", x: 35, y: 186 },
+  lion: { em: "🦁", label: "lion (mammal)", group: "mammal", x: 250, y: 266 },
+  chameleon: { em: "🦎", label: "chameleon (reptile)", group: "reptile", x: 58, y: 346 },
+  frog: { em: "🐸", label: "frog (amphibian)", group: "amphibian", x: 176, y: 346 }
+};
+const Q = {
+  q1: { n: 1, text: "Does it have legs?", yes: "q2", no: "shark", x: 170, y: 26 },
+  q2: { n: 2, text: "Does it have feathers?", yes: "parrot", no: "q3", x: 95, y: 106 },
+  q3: { n: 3, text: "Does it lay eggs?", yes: "q4", no: "lion", x: 160, y: 186 },
+  q4: { n: 4, text: "Does it have scales?", yes: "chameleon", no: "frog", x: 116, y: 266 }
+};
+const QW = 158, QH = 34;
+const EDGES = [
+  ["q1", "q2", "YES", 140, 43, 110, 89], ["q1", "shark", "NO", 200, 43, 255, 80],
+  ["q2", "parrot", "YES", 60, 123, 37, 160], ["q2", "q3", "NO", 125, 123, 150, 169],
+  ["q3", "q4", "YES", 130, 203, 116, 249], ["q3", "lion", "NO", 200, 203, 250, 240],
+  ["q4", "chameleon", "YES", 86, 283, 60, 320], ["q4", "frog", "NO", 146, 283, 172, 320]
+];
+const MYSTERY = {
+  lion: [["q1", "I have four legs."], ["q2", "I have fur, not feathers."], ["q3", "My cubs grow inside me and are born."]],
+  parrot: [["q1", "I have two legs."], ["q2", "I have bright feathers."]],
+  frog: [["q1", "I have four legs."], ["q2", "I have no feathers."], ["q3", "I lay my eggs in water."], ["q4", "My skin is smooth and wet. I have no scales."]],
+  chameleon: [["q1", "I have four legs."], ["q2", "I have no feathers."], ["q3", "I lay my eggs on land."], ["q4", "My skin is dry and has scales."]],
+  shark: [["q1", "I have no legs. I have fins."], [null, "I live in the sea."]]
+};
+const Q4_CHOICES = [
+  { t: "Does it have scales?", ok: true, say: "Great question! A chameleon has dry scales. A frog has smooth, wet skin." },
+  { t: "Is it green?", ok: false, say: "Hmm. A frog can be green and so can a chameleon. Pick a question with a different answer for each." },
+  { t: "Does it have eyes?", ok: false, say: "Both animals have eyes. Pick a question with a different answer for each animal." }
+];
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+let phase = "fix", q4Fixed = false, order = [], idx = 0, node = "q1", walked = new Set(), walkedEdges = new Set(), found = null, won = 0, revealed = false;
+let soundOn = true, actx = null;
+const TOTAL = 6;
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function say(t, k) { const m = $("msg"); m.textContent = t; m.className = "bubble" + (k ? " " + k : ""); }
+function beep(f) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    f.forEach((hz) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "sine"; o.frequency.value = hz; o.connect(g); g.connect(actx.destination);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.15, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); o.start(t); o.stop(t + 0.22); t += 0.14; });
+  } catch (e) {}
+}
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const set = ["⭐", "🎉", "🌟", "🎈", "✨"];
+  for (let i = 0; i < 26; i++) { const s = document.createElement("span"); s.className = "conf"; s.textContent = set[i % 5]; s.style.left = Math.random() * 100 + "vw"; s.style.animationDelay = Math.random() * 0.7 + "s"; document.body.appendChild(s); setTimeout(() => s.remove(), 3200); }
+}
+function leadsTo(n, target) {
+  if (n === target) return true;
+  if (!Q[n]) return false;
+  return leadsTo(Q[n].yes, target) || leadsTo(Q[n].no, target);
+}
+function correctAnswer(n, target) { return leadsTo(Q[n].yes, target) ? "yes" : "no"; }
+function starSvg(on) { return '<svg class="star' + (on ? " on" : "") + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>'; }
+
+/* ---------- drawing ---------- */
+function drawTree() {
+  let s = "";
+  EDGES.forEach(([a, b, lab, x1, y1, x2, y2]) => {
+    const w = walkedEdges.has(a + ">" + b);
+    s += '<path class="edge' + (w ? " walked" : "") + '" d="M' + x1 + " " + y1 + " L" + x2 + " " + y2 + '"/>';
+    s += '<text class="elabel" x="' + ((x1 + x2) / 2 + (x2 > x1 ? 14 : -14)) + '" y="' + ((y1 + y2) / 2 + 3) + '">' + lab + "</text>";
+  });
+  Object.keys(Q).forEach((k) => {
+    const n = Q[k], miss = k === "q4" && !q4Fixed;
+    const cls = "qnode" + (miss ? " missing" : "") + (phase === "play" && node === k && !found ? " active" : "") + (walked.has(k) ? " walked" : "");
+    const txt = miss ? "4  ? ? ?" : n.n + " " + n.text;
+    s += '<g class="' + cls + '"><rect x="' + (n.x - QW / 2) + '" y="' + (n.y - QH / 2) + '" width="' + QW + '" height="' + QH + '" rx="12"/><text x="' + n.x + '" y="' + (n.y + 4) + '">' + txt + "</text></g>";
+  });
+  Object.keys(LEAVES).forEach((k) => {
+    const l = LEAVES[k];
+    s += '<g class="leaf' + (found === k ? " found" : "") + '"><circle cx="' + l.x + '" cy="' + l.y + '" r="26" style="stroke:var(' + GROUPS[l.group] + ')"/><text class="em" x="' + l.x + '" y="' + (l.y + 1) + '">' + l.em + '</text><text class="lb" x="' + l.x + '" y="' + (l.y + 42) + '">' + l.label + "</text></g>";
+  });
+  $("tree").innerHTML = s;
+}
+function drawStars() {
+  $("stars").innerHTML = Array.from({ length: TOTAL }, (_, i) => starSvg(i < won)).join("");
+  $("stars").setAttribute("aria-label", won + " of " + TOTAL + " stars won");
+}
+function drawGame() {
+  const g = $("game");
+  if (phase === "fix") {
+    g.innerHTML = '<h2>Question 4 is missing!</h2><p style="margin:0;font-size:1.1rem;line-height:1.4">The chameleon and the frog both have four legs, no feathers and lay eggs. Which question can tell them apart?</p><div class="choices" id="choices"></div>';
+    shuffle(Q4_CHOICES).forEach((c) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "choice"; b.textContent = c.t;
+      b.addEventListener("click", () => chooseQ4(c, b)); $("choices").appendChild(b);
+    });
+  } else if (phase === "play") {
+    const a = order[idx];
+    const facts = MYSTERY[a].map((f, i) => '<li data-q="' + (f[0] || "") + '">' + f[1] + "</li>").join("");
+    let h = '<h2>Mystery animal ' + (idx + 1) + ' of 5</h2><div class="case"><div class="mystery' + (revealed ? " revealed" : "") + '" aria-label="' + (revealed ? a : "hidden animal") + '">' + (revealed ? LEAVES[a].em : "❓") + '</div><div><h3>Clues</h3><ul class="facts">' + facts + "</ul></div></div>";
+    if (!revealed) {
+      h += '<p class="question" id="qtext">Question ' + Q[node].n + ": " + Q[node].text + '</p><div class="yn"><button class="yes" id="yesBtn" type="button">Yes</button><button class="no" id="noBtn" type="button">No</button></div>';
+    } else {
+      h += '<p class="question">It is a ' + a + "! It is a " + LEAVES[a].group + '.</p><div class="center"><button class="btn" id="nextBtn" type="button">' + (idx === 4 ? "Finish" : "Next mystery animal") + "</button></div>";
+    }
+    g.innerHTML = h;
+    if (!revealed) { $("yesBtn").addEventListener("click", () => answer("yes")); $("noBtn").addEventListener("click", () => answer("no")); }
+    else { $("nextBtn").addEventListener("click", next); $("nextBtn").focus(); }
+  } else {
+    g.innerHTML = '<div class="done"><div class="big" aria-hidden="true">🏆</div><h2>You are a Key Detective!</h2><p>You fixed the key and found all 5 animals. Keys help scientists sort living things into groups.</p><button class="btn" id="againBtn" type="button">Play again</button></div>';
+    $("againBtn").addEventListener("click", start);
+  }
+}
+function drawAll() {
+  $("phaseLabel").textContent = phase === "fix" ? "Step 1: Fix the key" : phase === "play" ? "Step 2: Use the key" : "All done!";
+  drawStars(); drawTree(); drawGame();
+}
+
+/* ---------- play ---------- */
+function chooseQ4(c, btn) {
+  if (c.ok) { q4Fixed = true; won = 1; beep([660, 880]); say(c.say + " Now use the key!", "good"); confetti(); phase = "play"; order = shuffle(Object.keys(MYSTERY)); idx = 0; startAnimal(); }
+  else { beep([300, 240]); say(c.say, "try"); btn.classList.add("shake"); setTimeout(() => btn.classList.remove("shake"), 500); }
+}
+function startAnimal() { node = "q1"; walked = new Set(); walkedEdges = new Set(); found = null; revealed = false; drawAll(); }
+function answer(a) {
+  const target = order[idx], right = correctAnswer(node, target);
+  if (a === right) {
+    const nxt = Q[node][a]; walked.add(node); walkedEdges.add(node + ">" + nxt); beep([660, 880]);
+    if (LEAVES[nxt]) { found = nxt; revealed = true; won++; say("You found it! Follow the key, answer, and the animal is there.", "good"); confetti(); beep([523, 659, 784, 1047]); }
+    else { node = nxt; say("Yes! On to question " + Q[node].n + ".", "good"); }
+    drawAll();
+  } else {
+    beep([300, 240]);
+    const clue = MYSTERY[target].find((f) => f[0] === node);
+    say("Not quite. Check the clues, then try again!", "try");
+    const li = document.querySelector('.facts li[data-q="' + node + '"]'); if (li) li.classList.add("flash");
+    const btn = $(a === "yes" ? "yesBtn" : "noBtn"); btn.classList.add("shake"); setTimeout(() => btn.classList.remove("shake"), 500);
+  }
+}
+function next() {
+  if (idx === 4) { phase = "end"; found = null; say("Well done, detective! Every animal found.", "good"); confetti(); beep([523, 659, 784, 1047]); drawAll(); return; }
+  idx++; say("Here is the next mystery animal. Read the clues!"); startAnimal();
+}
+function start() {
+  phase = "fix"; q4Fixed = false; won = 0; walked = new Set(); walkedEdges = new Set(); found = null; revealed = false; node = "q1";
+  say("Hello, detective! A key is a set of questions that sorts animals. Question 4 is missing. Can you fix it?"); drawAll();
+}
+$("soundBtn").addEventListener("click", () => { soundOn = !soundOn; $("soundBtn").textContent = soundOn ? "Sound on" : "Sound off"; $("soundBtn").setAttribute("aria-pressed", String(soundOn)); });
+start();
+</script>
+
+</body></html>
